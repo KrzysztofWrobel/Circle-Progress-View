@@ -19,7 +19,6 @@ import android.graphics.Shader;
 import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.os.Build;
-import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.ColorInt;
 import android.support.annotation.FloatRange;
@@ -31,22 +30,23 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 /**
  * An circle view, similar to Android's ProgressBar.
  * Can be used in 'value mode' or 'spinning mode'.
- * <p/>
+ * <p>
  * In spinning mode it can be used like a intermediate progress bar.
- * <p/>
+ * <p>
  * In value mode it can be used as a progress bar or to visualize any other value.
  * Setting a value is fully animated. There are also nice transitions from animating to value mode.
- * <p/>
+ * <p>
  * Typical use case would be to load a new value. During the loading time set the CircleView to spinning.
  * As soon as you get your value, just set it with {@link #setValueAnimated(float, long)}.
  *
  * @author Jakob Grabner, based on the Progress wheel of Todd Davies
  *         https://github.com/Todd-Davies/CircleView
- *         <p/>
+ *         <p>
  *         Licensed under the Creative Commons Attribution 3.0 license see:
  *         http://creativecommons.org/licenses/by/3.0/
  */
@@ -170,7 +170,7 @@ public class CircleProgressView extends View {
     private float previousProgressChangedValue;
 
 
-    private DecimalFormat decimalFormat = new DecimalFormat("0");
+    private DecimalFormat decimalFormat = new DecimalFormat("0%");
 
     // Text typeface
     private Typeface textTypeface;
@@ -228,7 +228,7 @@ public class CircleProgressView extends View {
         return mBlockScale;
     }
 
-    public void setBlockScale(@FloatRange(from = 0.0, to=1)float blockScale) {
+    public void setBlockScale(@FloatRange(from = 0.0, to = 1) float blockScale) {
         if (blockScale >= 0.0f && blockScale <= 1.0f) {
             mBlockScale = blockScale;
             mBlockScaleDegree = mBlockDegree * blockScale;
@@ -909,7 +909,6 @@ public class CircleProgressView extends View {
         }
 
 
-
         // Recycle
         a.recycle();
     }
@@ -1051,6 +1050,7 @@ public class CircleProgressView extends View {
             previousProgressChangedValue = value;
         }
     }
+
     private void triggerReCalcTextSizesAndPositions() {
         mTextLength = -1;
         mOuterTextBounds = getInnerCircleRect(mCircleBounds);
@@ -1070,7 +1070,7 @@ public class CircleProgressView extends View {
      * The return should range from [0,360), rotating CLOCKWISE,
      * 0 and 360 degrees represents EAST,
      * 90 degrees represents SOUTH, etc...
-     * <p/>
+     * <p>
      * Assumes all points are in the same coordinate space.  If they are not,
      * you will need to call SwingUtilities.convertPointToScreen or equivalent
      * on all arguments before passing them  to this function.
@@ -1253,7 +1253,6 @@ public class CircleProgressView extends View {
     }
 
 
-
     /**
      * Returns the bounding rectangle of the given _text, with the size and style defined in the _textPaint centered in the middle of the _textBounds
      *
@@ -1286,6 +1285,7 @@ public class CircleProgressView extends View {
 
     //----------------------------------
     //region Setting up stuff
+
     /**
      * Set the bounds of the component
      */
@@ -1346,6 +1346,7 @@ public class CircleProgressView extends View {
         mBarPaint.setStrokeCap(mBarStrokeCap);
         mBarPaint.setStyle(Style.STROKE);
         mBarPaint.setStrokeWidth(mBarWidth);
+        mBarPaint.setStrokeCap(Paint.Cap.ROUND);
     }
 
 
@@ -1554,7 +1555,8 @@ public class CircleProgressView extends View {
                 text = mText != null ? mText : "";
                 break;
             case PERCENT:
-                text = decimalFormat.format(100f / mMaxValue * mCurrentValue);
+                float percentage = Math.min(mCurrentValue / mMaxValue, 9.99f);
+                text = NumberFormat.getPercentInstance().format(percentage);
                 break;
             case VALUE:
                 text = decimalFormat.format(mCurrentValue);
@@ -1633,10 +1635,14 @@ public class CircleProgressView extends View {
     //endregion draw
     //----------------------------------
 
-
-
-
-
+    public void resetValue() {
+        mCurrentValue = mValueTo = 0;
+        mAnimationState = AnimationState.IDLE;
+        if (mAnimationStateChangedListener != null) {
+            mAnimationStateChangedListener.onAnimationStateChanged(mAnimationState);
+        }
+        invalidate();
+    }
 
 
     /**
@@ -1652,7 +1658,6 @@ public class CircleProgressView extends View {
     public void spin() {
         mAnimationHandler.sendEmptyMessage(AnimationMsg.START_SPINNING.ordinal());
     }
-
 
 
     //----------------------------------
@@ -1701,7 +1706,6 @@ public class CircleProgressView extends View {
 
     //-----------------------------------
     //region listener for progress change
-
 
 
     public interface OnProgressChangedListener {

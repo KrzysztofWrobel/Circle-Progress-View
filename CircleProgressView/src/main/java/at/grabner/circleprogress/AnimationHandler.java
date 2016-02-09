@@ -376,7 +376,7 @@ public class AnimationHandler extends Handler {
 
     private void setValue(Message msg, CircleProgressView circleView) {
         circleView.mValueFrom = circleView.mValueTo;
-        circleView.mCurrentValue = circleView.mValueTo = ((float[]) msg.obj)[0];
+        circleView.mCurrentValue = circleView.mValueTo =  ((float[]) msg.obj)[0];
         circleView.mAnimationState = AnimationState.IDLE;
         if (circleView.mAnimationStateChangedListener != null) {
             circleView.mAnimationStateChangedListener.onAnimationStateChanged(circleView.mAnimationState);
